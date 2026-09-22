@@ -23,33 +23,93 @@ Sistem dirancang untuk mendukung alur administrasi dokumen secara terpusat, anta
 
 ## Workflow Sistem
 
-Secara umum, proses dokumen berjalan dengan alur berikut:
+Workflow bersifat dinamis dan dapat dikonfigurasi per jenis dokumen serta, bila
+diperlukan, dibatasi untuk unit kerja tertentu. Setiap workflow memiliki satu atau
+lebih tahap persetujuan. Approver pada setiap tahap dapat ditentukan berdasarkan
+pengguna, jabatan, jabatan dalam unit dokumen, role, atau permission.
 
-1. **Dokumen dibuat**
-   - Pengguna mengisi data dokumen sesuai jenisnya.
-   - Dokumen dapat dilengkapi metadata dan berkas pendukung.
+```mermaid
+flowchart TD
+    A[Dokumen dibuat] --> B{Jenis dokumen}
+    B -->|Dokumen umum| C[Disimpan sebagai DRAFT]
+    B -->|Surat keluar| D[Dibuat dan workflow langsung dimulai]
+    B -->|Surat masuk| E[Dicatat, diberi nomor agenda, dan PDF diunggah]
+    E --> F[Workflow disposisi langsung dimulai]
+    C --> G[Pembuat memilih dan memulai workflow]
+    D --> H[Status IN_REVIEW]
+    F --> H
+    G --> H
+    H --> I[Approver pada tahap aktif menerima tugas]
+    I --> J{Keputusan approver}
+    J -->|Setujui| K{Semua persetujuan wajib pada tahap selesai?}
+    K -->|Belum| I
+    K -->|Ya| L{Masih ada tahap berikutnya?}
+    L -->|Ya| M[Buat tugas untuk approver tahap berikutnya]
+    M --> I
+    J -->|Minta revisi| N[Status REVISION_REQUIRED]
+    N --> O[Pembuat memperbaiki dan mengajukan ulang]
+    O --> I
+    J -->|Tolak| P[Status REJECTED dan workflow berakhir]
+    L -->|Tidak| Q[Berikan nomor dokumen]
+    Q --> R[Generate dan tandatangani PDF final]
+    R --> S[Status COMPLETED dan masuk arsip]
+```
 
-2. **Dokumen diajukan**
-   - Pengguna memilih alur kerja yang sesuai.
-   - Sistem memeriksa kesesuaian jenis dokumen dan unit kerja.
+### Tahapan proses
 
-3. **Pemeriksaan dan persetujuan**
-   - Sistem membuat tugas persetujuan untuk pihak yang berwenang pada tahap aktif.
-   - Approver dapat menyetujui, menolak, atau meminta revisi sesuai aturan tahap tersebut.
-   - Setiap tindakan dicatat sebagai aktivitas dan dapat memicu notifikasi.
+1. **Pembuatan dan pengajuan dokumen**
+   - Pengguna membuat dokumen sesuai jenisnya dan dapat menambahkan metadata
+     serta berkas PDF pendukung.
+   - Dokumen umum disimpan sebagai `DRAFT`, kemudian pembuat memilih workflow
+     aktif yang sesuai dengan jenis dokumen dan unit kerjanya.
+   - Surat keluar dan surat masuk memulai workflow yang dipilih langsung saat
+     data disimpan. Surat masuk juga memperoleh nomor agenda otomatis.
 
-4. **Revisi atau pengajuan ulang**
-   - Jika diperlukan revisi, dokumen dikembalikan kepada pembuatnya.
-   - Setelah diperbaiki, dokumen dapat diajukan kembali untuk melanjutkan proses.
+2. **Pemeriksaan dan persetujuan**
+   - Saat workflow dimulai, status dokumen menjadi `IN_REVIEW` dan sistem
+     membuat tugas bagi seluruh approver pada tahap pertama.
+   - Approver dapat menyetujui, meminta revisi, atau menolak dokumen apabila
+     tindakan tersebut diizinkan pada konfigurasi tahap.
+   - Pada tahap wajib dengan beberapa approver, proses baru berlanjut setelah
+     seluruh persetujuan yang masih menunggu pada tahap tersebut selesai.
+   - Setelah sebuah tahap selesai, sistem membuat tugas dan notifikasi untuk
+     approver pada tahap berikutnya.
 
-5. **Penyelesaian dokumen**
-   - Setelah seluruh tahap disetujui, sistem memberikan nomor dokumen.
-   - Sistem membuat salinan PDF final berdasarkan template dan data dokumen.
-   - PDF dilengkapi QR code untuk membantu proses validasi.
+3. **Revisi, pengajuan ulang, dan penolakan**
+   - Permintaan revisi mengubah status menjadi `REVISION_REQUIRED` dan
+     mengembalikan dokumen kepada pembuat beserta catatan approver.
+   - Pembuat dapat memperbaiki dokumen lalu mengajukannya kembali. Sistem
+     membuat siklus persetujuan baru pada tahap yang sama.
+   - Penolakan mengubah status dokumen dan workflow menjadi `REJECTED`, lalu
+     menghentikan proses persetujuan.
 
-6. **Pengarsipan**
-   - Dokumen yang selesai ditandai sebagai dokumen final dan disimpan dalam arsip.
-   - Jejak aktivitas dan status proses tetap tersedia untuk kebutuhan penelusuran.
+4. **Finalisasi dan pengarsipan**
+   - Setelah tahap terakhir disetujui, sistem memberikan nomor dokumen sesuai
+     aturan penomoran yang berlaku.
+   - Sistem menghasilkan PDF final, menjalankan proses penandatanganan, dan
+     menyertakan QR code yang mengarah ke halaman verifikasi publik.
+   - Status dokumen menjadi `COMPLETED`, waktu arsip dicatat, dan dokumen dapat
+     diakses melalui menu Arsip.
+
+5. **Disposisi dan tindak lanjut**
+   - Pengguna yang berwenang dapat meneruskan dokumen kepada pengguna, jabatan,
+     atau unit tujuan disertai instruksi dan tenggat waktu.
+   - Penerima mengelola disposisi melalui status `UNREAD`, `READ`,
+     `IN_PROGRESS`, hingga `COMPLETED`.
+   - Seluruh pembuatan dokumen, keputusan workflow, pengajuan ulang, dan
+     perubahan status disposisi dicatat pada log aktivitas. Notifikasi dikirim
+     kepada pihak terkait pada setiap tindakan penting.
+
+### Ringkasan status
+
+| Status | Keterangan |
+| --- | --- |
+| `DRAFT` | Dokumen masih disiapkan dan belum masuk workflow. |
+| `IN_REVIEW` | Dokumen sedang menunggu persetujuan pada tahap aktif. |
+| `REVISION_REQUIRED` | Dokumen perlu diperbaiki oleh pembuat. |
+| `REJECTED` | Dokumen ditolak dan workflow dihentikan. |
+| `DISPOSITIONED` | Dokumen telah diteruskan melalui disposisi. |
+| `COMPLETED` | Seluruh tahap selesai dan dokumen telah diarsipkan. |
 
 ## Stack Teknologi
 
