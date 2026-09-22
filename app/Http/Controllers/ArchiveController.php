@@ -1,0 +1,6 @@
+<?php
+namespace App\Http\Controllers;
+use App\Models\{Document,DocumentType,Unit,User}; use Illuminate\Http\Request;
+class ArchiveController extends Controller {
+ public function index(Request $request){abort_unless($request->user()->hasPermission('view documents'),403);$query=Document::with(['type','unit','creator'])->whereIn('status',['COMPLETED','ARCHIVED'])->latest('archived_at');if(!$request->user()->hasPermission('view all documents'))$query->where('creator_id',$request->user()->id);$query->when($request->filled('year'),fn($q)=>$q->whereYear('document_date',$request->year))->when($request->filled('unit_id'),fn($q)=>$q->where('unit_id',$request->unit_id))->when($request->filled('document_type_id'),fn($q)=>$q->where('document_type_id',$request->document_type_id))->when($request->filled('number'),fn($q)=>$q->where('number','like','%'.$request->number.'%'))->when($request->filled('search'),fn($q)=>$q->where('subject','like','%'.$request->search.'%'))->when($request->filled('creator_id'),fn($q)=>$q->where('creator_id',$request->creator_id));return view('archives.index',['documents'=>$query->paginate(20)->withQueryString(),'units'=>Unit::orderBy('name')->get(),'types'=>DocumentType::orderBy('name')->get(),'creators'=>User::orderBy('name')->get()]);}
+}

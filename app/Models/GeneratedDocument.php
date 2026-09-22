@@ -1,0 +1,1 @@
+<?php namespace App\Models; use Illuminate\Database\Eloquent\Model; class GeneratedDocument extends Model { protected $fillable=['document_id','template_id','html_snapshot','data_snapshot','pdf_path','signature_provider','signature_status']; protected $casts=['data_snapshot'=>'array']; }

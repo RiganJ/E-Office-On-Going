@@ -1,0 +1,1 @@
+<?php namespace App\Models; use Illuminate\Database\Eloquent\Model; class NumberingRule extends Model { protected $fillable=['document_type_id','unit_id','format','reset_period','is_active']; public function documentType(){return $this->belongsTo(DocumentType::class);} public function unit(){return $this->belongsTo(Unit::class);} }

@@ -1,0 +1,49 @@
+# Environment dan kredensial lokal
+.env
+.env.*
+!.env.example
+
+# Log dan cache runtime
+*.log
+/.phpunit.cache
+/.phpunit.result.cache
+/.phpactor.json
+
+# File sistem dan hasil build
+.DS_Store
+Thumbs.db
+/public/build
+/public/hot
+/public/storage
+
+# Dependency dan konfigurasi tooling lokal
+/node_modules
+/vendor
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+/auth.json
+
+# Data lokal dan file runtime aplikasi
+/database/*.sqlite
+/database/*.sqlite-*
+/storage/*.key
+/storage/pail
+/storage/app/*
+!/storage/app/.gitignore
+!/storage/app/private/
+!/storage/app/public/
+/storage/framework/*
+!/storage/framework/.gitignore
+!/storage/framework/cache/
+!/storage/framework/sessions/
+!/storage/framework/testing/
+!/storage/framework/views/
+/storage/logs/*
+!/storage/logs/.gitignore
+
+# Berkas development lokal
+Homestead.json
+Homestead.yaml

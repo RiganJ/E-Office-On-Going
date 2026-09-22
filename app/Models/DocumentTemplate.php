@@ -1,0 +1,1 @@
+<?php namespace App\Models; use Illuminate\Database\Eloquent\Model; class DocumentTemplate extends Model { protected $fillable=['name','document_type_id','unit_id','content','header','footer','is_active']; }

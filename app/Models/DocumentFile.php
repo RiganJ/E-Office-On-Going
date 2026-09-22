@@ -1,0 +1,1 @@
+<?php namespace App\Models; use Illuminate\Database\Eloquent\Model; class DocumentFile extends Model { protected $fillable=['document_id','original_filename','stored_filename','disk','path','mime_type','size','checksum','uploaded_by']; public function document(){return $this->belongsTo(Document::class);} }

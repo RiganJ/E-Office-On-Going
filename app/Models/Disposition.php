@@ -1,0 +1,3 @@
+<?php
+namespace App\Models; use Illuminate\Database\Eloquent\Model;
+class Disposition extends Model { protected $fillable=['document_id','from_user_id','from_position_id','from_unit_id','to_user_id','to_position_id','to_unit_id','instruction','notes','priority','deadline','status','read_at','processed_at','completed_at']; protected $casts=['deadline'=>'datetime','read_at'=>'datetime','processed_at'=>'datetime','completed_at'=>'datetime']; public function document(){return $this->belongsTo(Document::class);} public function sender(){return $this->belongsTo(User::class,'from_user_id');} public function recipient(){return $this->belongsTo(User::class,'to_user_id');} }
